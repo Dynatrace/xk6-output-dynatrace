@@ -1,6 +1,6 @@
 package dynatracewriter
 
-import{
+import {
    "time"
    "fmt"
    "strcomv"
