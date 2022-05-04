@@ -23,10 +23,7 @@ type dynatraceMetric struct{
     metricTimeStamp uint32
 }
 
-func New(metricDisplayName string, description string, metricKeyName string, metricUnit string,metricDimensions map[string]string,value float64,metricTimeStamp uint32) dynatraceMetric {
-    e := dynatraceMetric {metricDisplayName, description, metricKeyName, metricUnit,metricDimensions,value,metricTimeStamp}
-    return e
-}
+
 func samleToDynametric(sample Sample ) dynatraceMetric {
      e := new(dynatraceMetric)
      e.metricKeyName = sample.Metric.Name
@@ -39,7 +36,7 @@ func samleToDynametric(sample Sample ) dynatraceMetric {
 
 func toText(e *dynatraceMetric) string {
 
-   result string
+   var result=""
 
    result=e.metricKeyName
 

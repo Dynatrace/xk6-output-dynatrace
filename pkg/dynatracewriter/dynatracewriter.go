@@ -33,15 +33,13 @@ func New(params output.Params) (*Output, error) {
 		return nil, err
 	}
 
-	config, err := config.ConstructRemoteConfig()
+	newconfig, err := config.ConstructRemoteConfig()
 	if err != nil {
 		return nil, err
 	}
 
-
-
 	return &Output{
-		config:  config,
+		config:  newconfig,
 		logger:  params.Logger,
 	}, nil
 }
@@ -123,7 +121,7 @@ func (o *Output) flush() {
 func generatePayload(dynatraceMetric *[]dynatraceMetric) string {
     result string
 
-    result="";
+    result=""
     for i:= 0; e < len(dynatraceMetric); i++{
         result+=dynatraceMetric[i].toText()+"\n"
     }
@@ -146,7 +144,7 @@ func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleCont
 
 
 
-			if dynametric, err := samleToDynametric( sample)
+			if dynametric, err := samleToDynametric( sample) {
 				o.logger.Error(err)
             } else {
 				dynTimeSeries = append(dynTimeSeries, dynametric...)
