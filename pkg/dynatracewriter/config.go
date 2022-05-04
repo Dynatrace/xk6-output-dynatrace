@@ -61,8 +61,7 @@ func (conf Config) ConstructConfig() (*conf, error) {
 	}
     if len(conf.ApiToken) == 0 {
        return nil
-    }
-    else {
+    } else {
         conf.Headers["Content-Type"] = "text/plain; charset=utf-8"
         conf.Headers["Authorization"] ="Api-Token "+conf.ApiToken
         conf.Headers["accept"] = "*/*"

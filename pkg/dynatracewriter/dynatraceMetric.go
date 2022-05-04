@@ -8,11 +8,11 @@ import (
     "go.k6.io/k6/stats"
 )
 
-const {
+const (
     metricDisplayNameProperty="dt.meta.displayName"
     metricDescriptionProperty="dt.meta.description"
     metricUnitProperty="dt.meta.unit"
-}
+)
 type dynatraceMetric struct{
     metricDisplayName string
     description string
@@ -28,12 +28,16 @@ func New(metricDisplayName string, description string, metricKeyName string, met
     return e
 }
 func samleToDynametric(sample Sample ) dynatraceMetric {
-    e := dynatraceMetric { metricKeyName:= sample.Metric.Name, metricDimensions:=sample.CloneTags(), value:= sample.Value , metricTimeStamp:=sample.Time.UnixMilli()   }
+     e := new(dynatraceMetric)
+     e.metricKeyName = sample.Metric.Name
+     e.metricDimensions=sample.CloneTags()
+     e.value= sample.Value
+     e.metricTimeStamp=sample.Time.UnixMilli()
     return e
 }
 
 
-func toText(e dynatraceMetric) string{
+func toText(e *dynatraceMetric) string {
 
    result string
 

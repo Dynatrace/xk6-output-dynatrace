@@ -38,7 +38,7 @@ func New(params output.Params) (*Output, error) {
 		return nil, err
 	}
 
-	/
+
 
 	return &Output{
 		config:  config,
@@ -120,7 +120,7 @@ func (o *Output) flush() {
 
 }
 
-func generatePayload(dynatraceMetric *dynatraceMetric[]) string {
+func generatePayload(dynatraceMetric *[]dynatraceMetric) string {
     result string
 
     result="";
@@ -148,7 +148,7 @@ func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleCont
 
 			if dynametric, err := samleToDynametric( sample)
 				o.logger.Error(err)
-			} else {
+            } else {
 				dynTimeSeries = append(dynTimeSeries, dynametric...)
 			}
 		}
