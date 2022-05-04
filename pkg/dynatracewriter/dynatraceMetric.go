@@ -3,7 +3,7 @@ package dynatracewriter
 import (
    "time"
    "fmt"
-   "strcomv"
+   "strconv"
    "go.k6.io/k6/output"
     "go.k6.io/k6/stats"
 )
