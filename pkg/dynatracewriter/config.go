@@ -23,11 +23,12 @@ const (
 type Config struct {
 	Url null.String `json:"url" envconfig:"K6_DYNATRACE_URL"` // here, in the name of env variable, we assume that we won't need to distinguish between remote write URL vs remote read URL
 
+    Headers map[string]string `json:"headers" envconfig:"K6_DYNATRACE_HEADER"`
 
 	InsecureSkipTLSVerify null.Bool   `json:"insecureSkipTLSVerify" envconfig:"K6_DYNATRACE_INSECURE_SKIP_TLS_VERIFY"`
 	CACert                null.String `json:"caCertFile" envconfig:"K6_CA_CERT_FILE"`
 
-	ApiToken     null.String `json:"user" envconfig:"K6_DYNATRACE_APITOKEN"`
+	ApiToken     null.String `json:"apitoken" envconfig:"K6_DYNATRACE_APITOKEN"`
 
 	FlushPeriod types.NullDuration `json:"flushPeriod" envconfig:"K6_DYNATRACE_FLUSH_PERIOD"`
 
@@ -145,7 +146,7 @@ func ParseArg(arg string) (Config, error) {
 		c.CACert = null.StringFrom(v)
 	}
 
-	if v, ok := params["ApiToken"].(string); ok {
+	if v, ok := params["apitoken"].(string); ok {
 		c.ApiToken = null.StringFrom(v)
 	}
 
@@ -215,7 +216,7 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 	}
 
 	// envconfig is not processing some undefined vars (at least duration) so apply them manually
-	if flushPeriod, flushPeriodDefined := env["K6_PDYNATRACE_FLUSH_PERIOD"]; flushPeriodDefined {
+	if flushPeriod, flushPeriodDefined := env["K6_DYNATRACE_FLUSH_PERIOD"]; flushPeriodDefined {
 		if err := result.FlushPeriod.UnmarshalText([]byte(flushPeriod)); err != nil {
 			return result, err
 		}
@@ -269,7 +270,7 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 		}
 	}
 
-	envHeaders := getEnvMap(env, "K6_DYNATRACE_HEADERS_")
+	envHeaders := getEnvMap(env, "K6_DYNATRACE_HEADER")
 	for k, v := range envHeaders {
 		result.Headers[k] = v
 	}
