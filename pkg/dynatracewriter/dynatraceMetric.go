@@ -1,12 +1,12 @@
 package dynatracewriter
 
-import {
+import (
    "time"
    "fmt"
    "strcomv"
    "go.k6.io/k6/output"
     "go.k6.io/k6/stats"
-}
+)
 
 const {
     metricDisplayNameProperty="dt.meta.displayName"
