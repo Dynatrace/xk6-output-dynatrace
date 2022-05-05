@@ -1,13 +1,10 @@
 package dynatracewriter
 
 import (
-	"context"
 	"fmt"
 	"time"
     "net/http"
 	//nolint:staticcheck
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/snappy"
 
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/output"
@@ -119,9 +116,8 @@ func (o *Output) flush() {
 }
 
 func generatePayload(dynatraceMetric *[]dynatraceMetric) string {
-    result string
 
-    result=""
+    var result=""
     for i:= 0; e < len(dynatraceMetric); i++{
         result+=dynatraceMetric[i].toText()+"\n"
     }
@@ -142,13 +138,11 @@ func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleCont
 			// lose info in tags or assign tags wrongly, let's store each Sample in a different TimeSeries, for now.
 			// This approach also allows to avoid hard to replicate issues with duplicate timestamps.
 
+            dynametric := samleToDynametric( sample)
 
 
-			if dynametric, err := samleToDynametric( sample) {
-				o.logger.Error(err)
-            } else {
-				dynTimeSeries = append(dynTimeSeries, dynametric...)
-			}
+            dynTimeSeries = append(dynTimeSeries, dynametric...)
+
 		}
 
 		// Do not blow up if remote endpoint is overloaded and responds too slowly.

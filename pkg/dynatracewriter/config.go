@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-    "log"
-    "net/http"
+
 	"github.com/kubernetes/helm/pkg/strvals"
 	 "go.k6.io/k6/lib/types"
-
+    "gopkg.in/guregu/null.v3"
 )
 
 const (
@@ -22,16 +21,11 @@ const (
 
 type Config struct {
 	Url null.String `json:"url" envconfig:"K6_DYNATRACE_URL"` // here, in the name of env variable, we assume that we won't need to distinguish between remote write URL vs remote read URL
-
     Headers map[string]string `json:"headers" envconfig:"K6_DYNATRACE_HEADER"`
-
 	InsecureSkipTLSVerify null.Bool   `json:"insecureSkipTLSVerify" envconfig:"K6_DYNATRACE_INSECURE_SKIP_TLS_VERIFY"`
 	CACert                null.String `json:"caCertFile" envconfig:"K6_CA_CERT_FILE"`
-
 	ApiToken     null.String `json:"apitoken" envconfig:"K6_DYNATRACE_APITOKEN"`
-
 	FlushPeriod types.NullDuration `json:"flushPeriod" envconfig:"K6_DYNATRACE_FLUSH_PERIOD"`
-
 	KeepTags    null.Bool `json:"keepTags" envconfig:"K6_KEEP_TAGS"`
 	KeepNameTag null.Bool `json:"keepNameTag" envconfig:"K6_KEEP_NAME_TAG"`
 	KeepUrlTag  null.Bool `json:"keepUrlTag" envconfig:"K6_KEEP_URL_TAG"`
@@ -51,11 +45,11 @@ func NewConfig() Config {
 	}
 }
 
-func (conf Config) ConstructConfig() (*conf, error) {
+func (conf Config) ConstructConfig() (*Config, error) {
 	// TODO: consider if the auth logic should be enforced here
 	// (e.g. if insecureSkipTLSVerify is switched off, then check for non-empty certificate file and auth, etc.)
 
-	u, err := url.Parse(conf.Url.String+defaultDynatraceMetricEndPoint)
+	u, err := url.Parse(conf.Url.String()+defaultDynatraceMetricEndPoint)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +57,7 @@ func (conf Config) ConstructConfig() (*conf, error) {
        return nil
     } else {
         conf.Headers["Content-Type"] = "text/plain; charset=utf-8"
-        conf.Headers["Authorization"] ="Api-Token "+conf.ApiToken
+        conf.Headers["Authorization"] ="Api-Token " + conf.ApiToken.String
         conf.Headers["accept"] = "*/*"
     }
      conf.Url= u
@@ -74,9 +68,7 @@ func (conf Config) ConstructConfig() (*conf, error) {
 // From here till the end of the file partial duplicates waiting for config refactor (k6 #883)
 
 func (base Config) Apply(applied Config) Config {
-	if applied.Mapping.Valid {
-		base.Mapping = applied.Mapping
-	}
+
 
 	if applied.Url.Valid {
 		base.Url = applied.Url
