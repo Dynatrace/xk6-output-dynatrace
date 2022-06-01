@@ -11,6 +11,7 @@ const (
     metricDisplayNameProperty="dt.meta.displayName"
     metricDescriptionProperty="dt.meta.description"
     metricUnitProperty="dt.meta.unit"
+    metricKeyPrefix="k6"
 )
 type dynatraceMetric struct{
     metricDisplayName string
@@ -19,29 +20,31 @@ type dynatraceMetric struct{
     metricUnit string
     metricDimensions map[string]string
     metricValue float64
-    metricTimeStamp uint32
+    metricTimeStamp int64
 }
 
 
 func samleToDynametric(sample stats.Sample ) dynatraceMetric {
-     e := new(dynatraceMetric)
-     e.metricKeyName = sample.Metric.Name
-     e.metricDimensions=sample.CloneTags()
-     e.value= sample.Value
-     e.metricTimeStamp=sample.Time.UnixMilli()
-    return e
+     return dynatraceMetric{
+        metricKeyName : sample.Metric.Name,
+        metricDimensions : sample.GetTags().CloneTags(),
+        metricValue : sample.Value,
+        metricTimeStamp : sample.GetTime().UnixMilli(),
+     }
 }
 
 
-func toText(e *dynatraceMetric) string {
+func (e *dynatraceMetric) toText() string {
 
    var result=""
 
-   result=e.metricKeyName
+   result=metricKeyPrefix+"."+e.metricKeyName
 
    if(len(e.metricDimensions)!=0) {
         for key, value := range e.metricDimensions {
-                result+=","+key+ "="+ value
+                if len(key)>0 && len(value)>0 {
+                     result+=","+key+ "="+ "\""+value+"\""
+                }
         }
    }
 
@@ -67,7 +70,7 @@ func toText(e *dynatraceMetric) string {
         e.metricTimeStamp=tUnixMilli
 
     }
-    result+=" "+strconv.Itoa(e.metricTimeStamp)
+    result+=" "+strconv.FormatInt(e.metricTimeStamp,10)
 
     return result
 }

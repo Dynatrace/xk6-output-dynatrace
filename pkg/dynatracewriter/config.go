@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+    "fmt"
 	"github.com/kubernetes/helm/pkg/strvals"
-	 "go.k6.io/k6/lib/types"
+	"go.k6.io/k6/lib/types"
     "gopkg.in/guregu/null.v3"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 type Config struct {
-	Url null.String `json:"url" envconfig:"K6_DYNATRACE_URL"` // here, in the name of env variable, we assume that we won't need to distinguish between remote write URL vs remote read URL
+	Url string `json:"url" envconfig:"K6_DYNATRACE_URL"` // here, in the name of env variable, we assume that we won't need to distinguish between remote write URL vs remote read URL
     Headers map[string]string `json:"headers" envconfig:"K6_DYNATRACE_HEADER"`
 	InsecureSkipTLSVerify null.Bool   `json:"insecureSkipTLSVerify" envconfig:"K6_DYNATRACE_INSECURE_SKIP_TLS_VERIFY"`
 	CACert                null.String `json:"caCertFile" envconfig:"K6_CA_CERT_FILE"`
@@ -33,7 +33,7 @@ type Config struct {
 
 func NewConfig() Config {
 	return Config{
-		Url:                   null.StringFrom("https://dynatrace.live.com"),
+		Url:                   "https://dynatrace.live.com",
 		InsecureSkipTLSVerify: null.BoolFrom(true),
 		CACert:                null.NewString("", false),
         ApiToken:              null.NewString("", false),
@@ -49,18 +49,18 @@ func (conf Config) ConstructConfig() (*Config, error) {
 	// TODO: consider if the auth logic should be enforced here
 	// (e.g. if insecureSkipTLSVerify is switched off, then check for non-empty certificate file and auth, etc.)
 
-	u, err := url.Parse(conf.Url.String()+defaultDynatraceMetricEndPoint)
+	u, err := url.Parse(conf.Url+defaultDynatraceMetricEndPoint)
 	if err != nil {
 		return nil, err
 	}
-    if len(conf.ApiToken) == 0 {
-       return nil
+    if len(conf.ApiToken.String) == 0 {
+       return nil, fmt.Errorf("The Dynatrace API token can not been empty or Null")
     } else {
         conf.Headers["Content-Type"] = "text/plain; charset=utf-8"
         conf.Headers["Authorization"] ="Api-Token " + conf.ApiToken.String
         conf.Headers["accept"] = "*/*"
     }
-     conf.Url= u
+     conf.Url= u.String()
 
 	return &conf, nil
 }
@@ -70,7 +70,7 @@ func (conf Config) ConstructConfig() (*Config, error) {
 func (base Config) Apply(applied Config) Config {
 
 
-	if applied.Url.Valid {
+	if len(applied.Url)>0 {
 		base.Url = applied.Url
 	}
 
@@ -121,12 +121,8 @@ func ParseArg(arg string) (Config, error) {
 		return c, err
 	}
 
-	if v, ok := params["mapping"].(string); ok {
-		c.Mapping = null.StringFrom(v)
-	}
-
 	if v, ok := params["url"].(string); ok {
-		c.Url = null.StringFrom(v)
+		c.Url = v
 	}
 
 	if v, ok := params["insecureSkipTLSVerify"].(bool); ok {
@@ -216,7 +212,7 @@ func GetConsolidatedConfig(jsonRawConf json.RawMessage, env map[string]string, a
 
 
 	if url, urlDefined := env["K6_DYNATRACE_URL"]; urlDefined {
-		result.Url = null.StringFrom(url)
+		result.Url =url
 	}
 
 	if b, err := getEnvBool(env, "K6_DYNATRACE_INSECURE_SKIP_TLS_VERIFY"); err != nil {

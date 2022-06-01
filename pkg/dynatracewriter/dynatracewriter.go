@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"time"
     "net/http"
+    "io/ioutil"
 	//nolint:staticcheck
-
+    "bytes"
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/output"
 	"go.k6.io/k6/stats"
 )
 
 type Output struct {
-	config Config
+	config *Config
 	periodicFlusher *output.PeriodicFlusher
 	output.SampleBuffer
     params  output.Params
@@ -30,7 +31,7 @@ func New(params output.Params) (*Output, error) {
 		return nil, err
 	}
 
-	newconfig, err := config.ConstructRemoteConfig()
+	newconfig, err := config.ConstructConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -92,41 +93,53 @@ func (o *Output) flush() {
 	// Prometheus write handler processes only some fields as of now, so here we'll add only them.
 	dynatraceMetric := o.convertToTimeDynatraceData(samplesContainers)
 	nts = len(dynatraceMetric)
+    if nts > 0 {
+             o.logger.WithField("nts", nts).Debug("Converted samples to time series in preparation for sending.")
 
-	o.logger.WithField("nts", nts).Debug("Converted samples to time series in preparation for sending.")
+            var payload=generatePayload(dynatraceMetric)
 
-    payload =generatePayload(dynatraceMetric)
-	request, error := http.NewRequest("POST", o.config.Url, bytes.NewBuffer(payload))
-	for key,value := range o.config.Headers {
-	    request.Header.Set(key, value)
-	}
+        	request, error := http.NewRequest( "POST", o.config.Url, bytes.NewBuffer([]byte(payload)))
 
-    client := &http.Client{}
-    response, error := client.Do(request)
-    if error != nil {
-        po.logger.WithError(error).Fatal("Failed to send timeseries.")
+        	for key,value := range o.config.Headers {
+        	    request.Header.Set(key, value)
+        	}
+            o.logger.Debug("Payload to send " + payload)
+            client := &http.Client{}
+            response, error := client.Do(request)
+            if error != nil {
+                o.logger.WithError(error).Fatal("Failed to send timeseries.")
+            }
+            o.logger.Debug("response Status:" + response.Status)
+            defer response.Body.Close()
+
+
+            var b=""
+            for key, value := range  response.Header {
+                 for _, singlevalue := range value {
+                    b+=key+"="+singlevalue+"\n"
+                 }
+            }
+            o.logger.Debug("response Headers:" + b)
+            body, _ := ioutil.ReadAll(response.Body)
+            o.logger.Debug("response Body:"+ string(body))
+    } else {
+         o.logger.Debug("no data to send")
     }
-    defer response.Body.Close()
-
-    o.logger.Debug("response Status:" + response.Status)
-    o.logger.Debug("response Headers:" +  response.Header)
-    body, _ := ioutil.ReadAll(response.Body)
-    o.logger.Debug("response Body:"+ string(body))
 
 }
 
-func generatePayload(dynatraceMetric *[]dynatraceMetric) string {
+func generatePayload(dynatraceMetrics []dynatraceMetric) string {
 
     var result=""
-    for i:= 0; e < len(dynatraceMetric); i++{
-        result+=dynatraceMetric[i].toText()+"\n"
+    for i:= 0; i < len(dynatraceMetrics); i++ {
+        result+=dynatraceMetrics[i].toText()+"\n"
     }
 
     return result
 }
 
 func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleContainer) []dynatraceMetric {
-	dynTimeSeries := make([]dynatraceMetric, 0)
+	var dynTimeSeries []dynatraceMetric
 
 	for _, samplesContainer := range samplesContainers {
 		samples := samplesContainer.GetSamples()
@@ -139,15 +152,17 @@ func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleCont
 			// This approach also allows to avoid hard to replicate issues with duplicate timestamps.
 
             dynametric := samleToDynametric( sample)
-
-
-            dynTimeSeries = append(dynTimeSeries, dynametric...)
-
+            if &dynametric.metricValue != nil {
+                o.logger.Debug("metric name : " + dynametric.metricKeyName)
+                dynTimeSeries = append  (dynTimeSeries, dynametric)
+            } else {
+                o.logger.Debug("The value is missing")
+            }
 		}
 
 		// Do not blow up if remote endpoint is overloaded and responds too slowly.
 		// TODO: consider other approaches
-		if flushTooLong && len(promTimeSeries) > 150000 {
+		if flushTooLong && len(dynTimeSeries) > 150000 {
 			break
 		}
 	}
