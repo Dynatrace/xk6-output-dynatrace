@@ -1,5 +1,5 @@
 
-# xk6-dynatrace-output
+# xk6-output-dynatrace
 k6 extension for publishing test-run metrics to Dynatrace 
 
 
@@ -7,7 +7,7 @@ k6 extension for publishing test-run metrics to Dynatrace
 
 To build k6 binary with the Prometheus remote write output extension use:
 ```
-xk6 build --with github.com/henrikrexed/xk6-dynatrace-output@latest 
+xk6 build --with github.com/henrikrexed/xk6-output-dynatrace@latest 
 ```
 
 Then run new k6 binary with:
