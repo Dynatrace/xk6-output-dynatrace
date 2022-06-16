@@ -1,4 +1,4 @@
-module github.com/hrexed/xk6-dynatrace
+module github.com/hrexed/xk6-output-dynatrace
 
 go 1.16
 
