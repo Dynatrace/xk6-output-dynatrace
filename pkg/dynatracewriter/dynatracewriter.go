@@ -9,7 +9,7 @@ import (
     "bytes"
 	"github.com/sirupsen/logrus"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 type Output struct {
@@ -138,7 +138,7 @@ func generatePayload(dynatraceMetrics []dynatraceMetric) string {
     return result
 }
 
-func (o *Output) convertToTimeDynatraceData(samplesContainers []stats.SampleContainer) []dynatraceMetric {
+func (o *Output) convertToTimeDynatraceData(samplesContainers []metrics.SampleContainer) []dynatraceMetric {
 	var dynTimeSeries []dynatraceMetric
 
 	for _, samplesContainer := range samplesContainers {
