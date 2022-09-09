@@ -4,7 +4,7 @@ import (
    "time"
    "fmt"
    "strconv"
-    "go.k6.io/k6/stats"
+    "go.k6.io/k6/metrics"
 )
 
 const (
@@ -24,7 +24,7 @@ type dynatraceMetric struct{
 }
 
 
-func samleToDynametric(sample stats.Sample ) dynatraceMetric {
+func samleToDynametric(sample metrics.Sample ) dynatraceMetric {
      return dynatraceMetric{
         metricKeyName : sample.Metric.Name,
         metricDimensions : sample.GetTags().CloneTags(),
