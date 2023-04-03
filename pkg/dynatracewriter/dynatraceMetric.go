@@ -27,7 +27,7 @@ type dynatraceMetric struct{
 func samleToDynametric(sample metrics.Sample ) dynatraceMetric {
      return dynatraceMetric{
         metricKeyName : sample.Metric.Name,
-        metricDimensions : sample.GetTags().CloneTags(),
+        metricDimensions : sample.GetTags().Map(),
         metricValue : sample.Value,
         metricTimeStamp : sample.GetTime().UnixMilli(),
      }
