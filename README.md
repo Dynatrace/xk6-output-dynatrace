@@ -1,3 +1,5 @@
+⚠️ This repository has been archived and is no longer maintained.
+The code is available for historical reference or archival purposes.
 
 # xk6-output-dynatrace
 k6 extension for publishing test-run metrics to Dynatrace 
